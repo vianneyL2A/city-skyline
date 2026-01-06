@@ -68,13 +68,19 @@ public class GameEngine implements GameObservable {
 
         // 1. Avancer le temps
         TimeCycle completedCycle = timeManager.advanceTime();
-        player.incrementDaysSurvived();
+
+        // Incrémenter les jours survécus seulement quand un jour complet passe
+        if (completedCycle == TimeCycle.DAY || completedCycle == TimeCycle.MONTH || completedCycle == TimeCycle.YEAR) {
+            player.incrementDaysSurvived();
+        }
 
         // Notifier selon le cycle complété
         switch (completedCycle) {
             case YEAR -> notifyObservers(GameEventType.YEAR_PASSED);
             case MONTH -> notifyObservers(GameEventType.MONTH_PASSED);
-            default -> notifyObservers(GameEventType.DAY_PASSED);
+            case DAY -> notifyObservers(GameEventType.DAY_PASSED);
+            default -> {
+            } // Pas de notification pour les heures/minutes
         }
 
         // 2. Calculer production et demande

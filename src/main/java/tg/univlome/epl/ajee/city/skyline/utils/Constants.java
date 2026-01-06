@@ -14,7 +14,7 @@ public final class Constants {
     public static final int INITIAL_HAPPINESS = 75;
 
     // === Seuils ===
-    public static final int MIN_HAPPINESS_THRESHOLD = 20; // Game Over si en dessous
+    public static final int MIN_HAPPINESS_THRESHOLD = 5; // Game Over si en dessous
     public static final int MAX_HAPPINESS = 100;
 
     // === Coûts de base des centrales ===
@@ -56,5 +56,5 @@ public final class Constants {
     public static final String GAME_TITLE = "EnergyTycoon - Gestionnaire d'Énergie";
 
     // === Événements aléatoires ===
-    public static final double EVENT_PROBABILITY_PER_CYCLE = 0.1; // 10% de chance par cycle
+    public static final double EVENT_PROBABILITY_PER_CYCLE = 0.01; // 1% de chance par cycle
 }
