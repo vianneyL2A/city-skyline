@@ -5,6 +5,7 @@ package tg.univlome.epl.ajee.city.skyline.model.simulation;
  */
 public enum TimeCycle {
 
+    TICK("Tick", 0), // Cycle normal (pas de jour complet)
     DAY("Jour", 1),
     MONTH("Mois", 30),
     YEAR("Année", 365);

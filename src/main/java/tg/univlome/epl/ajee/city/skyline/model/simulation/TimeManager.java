@@ -32,9 +32,9 @@ public class TimeManager {
      * @return Le type de cycle qui vient de se terminer (YEAR, MONTH, ou DAY)
      */
     public TimeCycle advanceTime() {
-        TimeCycle completedCycle = TimeCycle.DAY;
+        TimeCycle completedCycle = TimeCycle.TICK; // Par défaut, pas de jour complet
 
-        // Avancer de 1 heure par tick (peut être ajusté)
+        // Avancer de 30 secondes par tick
         currentSecond += 30;
 
         if (currentSecond >= 60) {
@@ -50,7 +50,7 @@ public class TimeManager {
         if (currentHour >= 24) {
             currentHour = 0;
             currentDay++;
-            completedCycle = TimeCycle.DAY;
+            completedCycle = TimeCycle.DAY; // Un jour complet est passé
         }
 
         if (currentDay > Constants.DAYS_PER_MONTH) {
