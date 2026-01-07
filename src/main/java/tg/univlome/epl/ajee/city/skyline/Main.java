@@ -27,12 +27,12 @@ public class Main {
 
             // Message de bienvenue
             JOptionPane.showMessageDialog(mainWindow,
-                    "Bienvenue dans EnergyTycoon!\n\n" +
+                    "Bienvenue dans CitySkyline!\n\n" +
                             "Vous êtes le gestionnaire de l'énergie de cette ville.\n" +
                             "Construisez des centrales pour alimenter les habitants.\n" +
-                            "Maintenez le niveau de bonheur au-dessus de 20%.\n\n" +
+                            "Maintenez le niveau de bonheur au-dessus de 05%.\n\n" +
                             "Cliquez sur 'Jouer' pour commencer!",
-                    "🎮 EnergyTycoon",
+                    "🎮 CitySkyline",
                     JOptionPane.INFORMATION_MESSAGE);
         });
     }

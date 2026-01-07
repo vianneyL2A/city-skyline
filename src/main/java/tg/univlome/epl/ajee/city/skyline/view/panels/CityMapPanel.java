@@ -240,9 +240,11 @@ public class CityMapPanel extends JPanel {
 
         // Couleur de fond
         Color bgColor = switch (cell.getType()) {
-            case EMPTY -> new Color(200, 230, 200); // Vert clair
+            case EMPTY -> cell.isWater() ? new Color(100, 150, 230) : new Color(200, 230, 200); // Bleu pour eau, vert
+                                                                                                // pour terrain
             case RESIDENCE -> cell.isPowered() ? Colors.INFO : Colors.ERROR;
             case POWER_PLANT -> getPlantColor(cell.getPowerPlant());
+            case POWER_LINE -> new Color(255, 200, 100); // Orange pour les lignes électriques
         };
 
         g2d.setColor(bgColor);
@@ -274,7 +276,7 @@ public class CityMapPanel extends JPanel {
 
     private String getCellIcon(MapCell cell) {
         return switch (cell.getType()) {
-            case EMPTY -> "";
+            case EMPTY -> cell.isWater() ? "🌊" : (cell.hasPowerLine() ? "─" : "");
             case RESIDENCE -> "🏠";
             case POWER_PLANT -> {
                 if (cell.getPowerPlant() != null) {
@@ -282,17 +284,22 @@ public class CityMapPanel extends JPanel {
                 }
                 yield "⚡";
             }
+            case POWER_LINE -> "─";
         };
     }
 
     private String getCellTooltip(MapCell cell) {
         return switch (cell.getType()) {
-            case EMPTY -> "Terrain vide - Cliquez pour construire";
+            case EMPTY -> cell.isWater() ? "Cours d'eau - Non constructible" : "Terrain vide - Cliquez pour construire";
             case RESIDENCE -> {
                 Residence r = cell.getResidence();
+                String powerInfo = cell.isPowered()
+                        ? (cell.getPowerLevel() == 0 ? "✅ Raccordée directement"
+                                : "✅ Alimentée par propagation (niveau " + cell.getPowerLevel() + ")")
+                        : "❌ Sans électricité";
                 yield String.format("Résidence %s - %s",
                         r != null ? r.getLevel().getDisplayName() : "",
-                        cell.isPowered() ? "✅ Alimentée" : "❌ Sans électricité");
+                        powerInfo);
             }
             case POWER_PLANT -> {
                 PowerPlant p = cell.getPowerPlant();
@@ -300,6 +307,7 @@ public class CityMapPanel extends JPanel {
                         p != null ? p.getEnergyType().getDisplayName() : "",
                         p != null ? p.calculateProduction() : 0);
             }
+            case POWER_LINE -> "Ligne électrique";
         };
     }
 
@@ -360,6 +368,20 @@ public class CityMapPanel extends JPanel {
             return;
         }
 
+        if (cell.isWater()) {
+            JOptionPane.showMessageDialog(this, "Impossible de construire sur l'eau!",
+                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Vérification spéciale pour les centrales hydrauliques
+        if (type == EnergyType.HYDRO && !cityMap.isAdjacentToWater(cell.getX(), cell.getY())) {
+            JOptionPane.showMessageDialog(this,
+                    "💧 Les centrales hydrauliques doivent être construites\nà côté d'un cours d'eau!",
+                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         PowerPlant plant = switch (type) {
             case COAL -> new CoalPlant();
             case SOLAR -> new SolarPlant();
@@ -369,10 +391,16 @@ public class CityMapPanel extends JPanel {
         };
 
         if (gameEngine.buildPowerPlant(plant)) {
-            cityMap.placePowerPlant(cell.getX(), cell.getY(), plant);
-            JOptionPane.showMessageDialog(this,
-                    plant.getEnergyType().getIcon() + " Centrale construite!",
-                    "Succès", JOptionPane.INFORMATION_MESSAGE);
+            if (cityMap.placePowerPlant(cell.getX(), cell.getY(), plant)) {
+                JOptionPane.showMessageDialog(this,
+                        plant.getEnergyType().getIcon() + " Centrale construite!",
+                        "Succès", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                // Le placement a échoué - ne devrait pas arriver si les vérifications sont
+                // correctes
+                JOptionPane.showMessageDialog(this, "Impossible de placer la centrale ici!",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
         } else {
             JOptionPane.showMessageDialog(this, "Pas assez d'argent!",
                     "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -408,19 +436,29 @@ public class CityMapPanel extends JPanel {
 
         switch (cell.getType()) {
             case EMPTY -> {
-                detailsTitle.setText("🌿 Terrain vide");
-                detailsInfo.setText("<html>Position: " + cell.getX() + ", " + cell.getY() +
-                        "<br>Sélectionnez un outil<br>pour construire.</html>");
+                if (cell.isWater()) {
+                    detailsTitle.setText("🌊 Cours d'eau");
+                    detailsInfo.setText("<html>Position: " + cell.getX() + ", " + cell.getY() +
+                            "<br>Non constructible.<br>Bloque l'électricité.</html>");
+                } else {
+                    detailsTitle.setText("🌿 Terrain vide");
+                    detailsInfo.setText("<html>Position: " + cell.getX() + ", " + cell.getY() +
+                            "<br>Sélectionnez un outil<br>pour construire.</html>");
+                }
                 actionButton.setVisible(false);
             }
             case RESIDENCE -> {
                 Residence r = cell.getResidence();
                 detailsTitle.setText("🏠 Résidence");
+                String powerStatus = cell.isPowered()
+                        ? (cell.getPowerLevel() == 0 ? "✅ Raccordée"
+                                : "✅ Propagation (niv." + cell.getPowerLevel() + ")")
+                        : "❌ Non";
                 detailsInfo.setText(
                         String.format("<html>Niveau: %s<br>Habitants: %d/%d<br>Énergie: %s<br>Besoin: %d kWh</html>",
                                 r.getLevel().getDisplayName(),
                                 r.getInhabitantCount(), r.getLevel().getMaxInhabitants(),
-                                cell.isPowered() ? "✅ Oui" : "❌ Non",
+                                powerStatus,
                                 r.getEnergyNeed()));
                 actionButton.setText("⬆️ Améliorer");
                 actionButton.setVisible(true);
@@ -440,6 +478,12 @@ public class CityMapPanel extends JPanel {
                 } else {
                     actionButton.setVisible(false);
                 }
+            }
+            case POWER_LINE -> {
+                detailsTitle.setText("─ Ligne électrique");
+                detailsInfo.setText("<html>Position: " + cell.getX() + ", " + cell.getY() +
+                        "<br>Transporte l'électricité<br>vers les maisons.</html>");
+                actionButton.setVisible(false);
             }
         }
     }
