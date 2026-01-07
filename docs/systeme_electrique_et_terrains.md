@@ -10,7 +10,9 @@
 3. [Centrales Hydrauliques](#centrales-hydrauliques)
 4. [Système de Raccordement Électrique](#système-de-raccordement-électrique)
 5. [Propagation d'Électricité entre Maisons](#propagation-délectricité-entre-maisons)
-6. [Fichiers Implémentés](#fichiers-implémentés)
+6. [Système de Taxes](#système-de-taxes)
+7. [Panneau Économie](#panneau-économie)
+8. [Fichiers Implémentés](#fichiers-implémentés)
 
 ---
 
@@ -82,8 +84,11 @@ Si le joueur tente de construire une centrale hydraulique ailleurs, un message d
 ### Concept
 
 Le système combine deux mécanismes :
-1. **Couverture par rayon** : Les centrales alimentent les maisons dans un rayon de 5 cases (système existant conservé)
+1. **Couverture par rayon** : Les centrales alimentent **directement** les maisons dans un rayon de 5 cases (sans ligne électrique nécessaire)
 2. **Lignes électriques** : Possibilité de tracer des lignes pour atteindre des maisons plus éloignées
+
+> [!TIP]
+> Les maisons dans le rayon de couverture d'une centrale sont automatiquement raccordées (niveau 0) sans nécessiter de ligne électrique!
 
 ### Classe PowerLine
 
@@ -161,6 +166,87 @@ Explication :
 
 > [!TIP]
 > Utilisez la propagation pour économiser des lignes électriques : une seule maison raccordée peut alimenter tout un quartier!
+
+---
+
+## Système de Taxes
+
+### Concept
+
+Les habitants paient des taxes par cycle en fonction du niveau de leur résidence. **Condition importante** : Les taxes ne sont collectées que si la résidence est alimentée en électricité.
+
+### Taux de Taxe par Habitant
+
+| Niveau Résidence | Taxe/habitant/cycle | Max habitants |
+|------------------|---------------------|---------------|
+| 🏠 **Basique** | 2 € | 5 |
+| 🏡 **Standard** | 5 € | 10 |
+| 🏰 **Luxueux** | 10 € | 20 |
+| 🏯 **Premium** | 20 € | 30 |
+
+### Exemple de Calcul
+
+```
+Résidence Premium avec 20 habitants :
+→ 20 habitants × 20€ = 400€ par cycle
+
+Ville avec :
+- 3 résidences Basiques (15 hab.) : 15 × 2€ = 30€
+- 2 résidences Standard (20 hab.) : 20 × 5€ = 100€  
+- 1 résidence Premium (25 hab.) : 25 × 20€ = 500€
+→ Total taxes : 630€ par cycle
+```
+
+> [!IMPORTANT]
+> Si une résidence n'est pas alimentée en électricité, elle ne génère **aucune taxe** !
+
+### Fichiers Concernés
+
+| Fichier | Modification |
+|---------|-------------|
+| [ResidenceLevel.java](file:///Users/m2pro/NetBeansProjects/city-skyline/src/main/java/tg/univlome/epl/ajee/city/skyline/model/entities/ResidenceLevel.java) | Ajout de `taxPerInhabitant` |
+| [Residence.java](file:///Users/m2pro/NetBeansProjects/city-skyline/src/main/java/tg/univlome/epl/ajee/city/skyline/model/entities/Residence.java) | Ajout de `calculateTax()` |
+| [City.java](file:///Users/m2pro/NetBeansProjects/city-skyline/src/main/java/tg/univlome/epl/ajee/city/skyline/model/entities/City.java) | Ajout de `calculateTotalTax()` |
+| [GameEngine.java](file:///Users/m2pro/NetBeansProjects/city-skyline/src/main/java/tg/univlome/epl/ajee/city/skyline/model/simulation/GameEngine.java) | Collecte des taxes dans le cycle |
+
+---
+
+## Panneau Économie
+
+### Description
+
+Un nouvel onglet **💰 Économie** dans le tableau de bord affiche les informations financières détaillées.
+
+### Contenu du Panneau
+
+#### 📊 Bilan Financier (gauche)
+
+| Information | Description |
+|-------------|-------------|
+| 💵 Solde actuel | Argent disponible |
+| ⚡ Revenus électricité | Ventes d'énergie aux résidences |
+| 🏛️ Taxes collectées | Somme des taxes de toutes les résidences alimentées |
+| 🔧 Maintenance | Coût d'entretien des centrales |
+| 📈 Revenu net/cycle | Bilan des entrées/sorties |
+| Tendance | 📈 Hausse / 📉 Baisse / 📊 Stable |
+
+#### 📜 Transactions Récentes (droite)
+
+Tableau des 15 dernières transactions avec :
+- Jour
+- Type (💵 Revenu / 💸 Dépense)
+- Montant (coloré vert/rouge)
+- Description
+
+#### Statistiques rapides (bas)
+
+- 💵 Revenu total
+- ⚡ Énergie vendue (kWh)
+- 📅 Jours survécus
+
+### Fichier
+
+[EconomyPanel.java](file:///Users/m2pro/NetBeansProjects/city-skyline/src/main/java/tg/univlome/epl/ajee/city/skyline/view/panels/EconomyPanel.java)
 
 ---
 

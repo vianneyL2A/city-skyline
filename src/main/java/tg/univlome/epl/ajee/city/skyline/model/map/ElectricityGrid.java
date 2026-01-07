@@ -76,8 +76,10 @@ public class ElectricityGrid {
     /**
      * Met à jour tout le réseau électrique.
      * 1. Réinitialise l'alimentation de toutes les cellules
-     * 2. Alimente les maisons directement raccordées
-     * 3. Propage l'électricité aux maisons voisines
+     * 2. Alimente les maisons dans le rayon de couverture des centrales
+     * (directement raccordées)
+     * 3. Alimente les maisons via les lignes électriques (directement raccordées)
+     * 4. Propage l'électricité aux maisons voisines
      */
     public void updateGrid() {
         // 1. Réinitialiser l'alimentation de toutes les cellules
@@ -86,6 +88,25 @@ public class ElectricityGrid {
         // 2. Identifier et alimenter les maisons directement raccordées
         Set<MapCell> directlyPowered = new HashSet<>();
 
+        // 2a. Alimenter les résidences dans le rayon de couverture des centrales
+        List<MapCell> powerPlants = map.getPowerPlantCells();
+        for (MapCell plantCell : powerPlants) {
+            if (plantCell.getPowerPlant() != null && plantCell.getPowerPlant().isOperational()) {
+                // Trouver toutes les résidences dans le rayon de couverture
+                List<MapCell> residencesInRange = findResidencesInCoverageRadius(
+                        plantCell.getX(), plantCell.getY(), CityMap.POWER_PLANT_COVERAGE_RADIUS);
+
+                for (MapCell residence : residencesInRange) {
+                    if (!residence.isPowered()) {
+                        residence.setPowered(true);
+                        residence.setPowerLevel(0); // Niveau 0 = raccordement direct
+                        directlyPowered.add(residence);
+                    }
+                }
+            }
+        }
+
+        // 2b. Alimenter les résidences via les lignes électriques
         for (PowerLine line : powerLines) {
             if (!line.isValid(map)) {
                 continue; // Ignorer les lignes invalides
@@ -101,14 +122,41 @@ public class ElectricityGrid {
             List<MapCell> adjacentResidences = getAdjacentResidences(end.x, end.y);
 
             for (MapCell residence : adjacentResidences) {
-                residence.setPowered(true);
-                residence.setPowerLevel(0); // Niveau 0 = raccordement direct
-                directlyPowered.add(residence);
+                if (!residence.isPowered()) {
+                    residence.setPowered(true);
+                    residence.setPowerLevel(0); // Niveau 0 = raccordement direct
+                    directlyPowered.add(residence);
+                }
             }
         }
 
         // 3. Propager l'électricité aux maisons voisines (BFS)
         propagatePower(directlyPowered);
+    }
+
+    /**
+     * Trouve les résidences dans le rayon de couverture d'une centrale.
+     */
+    private List<MapCell> findResidencesInCoverageRadius(int centerX, int centerY, int radius) {
+        List<MapCell> residences = new ArrayList<>();
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                if (dx == 0 && dy == 0)
+                    continue;
+
+                // Distance euclidienne
+                double distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance > radius)
+                    continue;
+
+                MapCell cell = map.getCell(centerX + dx, centerY + dy);
+                if (cell != null && cell.isResidence()) {
+                    residences.add(cell);
+                }
+            }
+        }
+        return residences;
     }
 
     /**
