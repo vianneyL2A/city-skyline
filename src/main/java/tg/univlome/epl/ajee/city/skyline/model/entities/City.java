@@ -121,6 +121,17 @@ public class City {
     }
 
     /**
+     * Calcule le total des taxes à collecter.
+     * Les habitants ne paient la taxe que si leur résidence est alimentée en
+     * électricité.
+     */
+    public int calculateTotalTax() {
+        return residences.stream()
+                .mapToInt(Residence::calculateTax)
+                .sum();
+    }
+
+    /**
      * Calcule la satisfaction moyenne de tous les habitants.
      */
     public double calculateAverageHappiness() {

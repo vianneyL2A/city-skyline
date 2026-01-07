@@ -153,6 +153,20 @@ public class Residence {
         return (int) Math.min(payment, purchasePower);
     }
 
+    /**
+     * Calcule les taxes à collecter de cette résidence.
+     * Les habitants ne paient la taxe que si la résidence est alimentée en
+     * électricité.
+     * 
+     * @return Le montant total des taxes (habitantes × taxe par habitant)
+     */
+    public int calculateTax() {
+        if (!energySupplied) {
+            return 0; // Pas de taxe si pas d'électricité
+        }
+        return inhabitants.size() * level.getTaxPerInhabitant();
+    }
+
     @Override
     public String toString() {
         return String.format("Résidence[%d] %s - %s (%d/%d habitants, Besoin: %d kWh)",

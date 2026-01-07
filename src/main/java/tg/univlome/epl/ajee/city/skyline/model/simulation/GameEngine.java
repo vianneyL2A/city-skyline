@@ -97,12 +97,20 @@ public class GameEngine implements GameObservable {
         // 4. Distribuer l'énergie aux résidences
         distributeEnergy(production, demand);
 
-        // 5. Collecter les revenus
+        // 5. Collecter les revenus de vente d'électricité
         int revenue = collectRevenue();
         player.earn(revenue);
+
+        // 6. Collecter les taxes des habitants (seulement si alimentés)
+        int taxes = city.calculateTotalTax();
+        player.earn(taxes);
+        if (taxes > 0) {
+            market.recordExpense(-taxes, "💰 Taxes collectées", timeManager.getTotalDays());
+        }
+
         notifyObservers(GameEventType.MONEY_CHANGED, player.getMoney());
 
-        // 6. Payer la maintenance
+        // 7. Payer la maintenance
         int maintenance = city.calculateTotalMaintenance();
         if (!player.spend(maintenance)) {
             // Pas assez d'argent pour la maintenance
@@ -110,17 +118,17 @@ public class GameEngine implements GameObservable {
         }
         market.recordExpense(maintenance, "Maintenance des centrales", timeManager.getTotalDays());
 
-        // 7. Mettre à jour le bonheur
+        // 8. Mettre à jour le bonheur
         updateHappiness(production, demand);
 
-        // 8. Gérer les événements aléatoires
+        // 9. Gérer les événements aléatoires
         GameEvent newEvent = eventManager.tryGenerateEvent();
         if (newEvent != null) {
             notifyObservers(GameEventType.RANDOM_EVENT, newEvent);
         }
         eventManager.updateEvents();
 
-        // 9. Vérifier condition de fin
+        // 10. Vérifier condition de fin
         checkGameOver();
     }
 
