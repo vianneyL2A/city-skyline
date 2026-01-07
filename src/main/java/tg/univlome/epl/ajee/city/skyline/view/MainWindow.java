@@ -8,6 +8,7 @@ import tg.univlome.epl.ajee.city.skyline.view.components.ResourceBar;
 import tg.univlome.epl.ajee.city.skyline.view.components.TimeControlBar;
 import tg.univlome.epl.ajee.city.skyline.view.panels.CityMapPanel;
 import tg.univlome.epl.ajee.city.skyline.view.panels.DashboardPanel;
+import tg.univlome.epl.ajee.city.skyline.view.panels.EconomyPanel;
 import tg.univlome.epl.ajee.city.skyline.view.panels.PowerPlantPanel;
 import tg.univlome.epl.ajee.city.skyline.view.styles.Colors;
 import tg.univlome.epl.ajee.city.skyline.view.styles.Theme;
@@ -27,6 +28,7 @@ public class MainWindow extends JFrame implements GameObserver {
     private final DashboardPanel dashboardPanel;
     private final PowerPlantPanel powerPlantPanel;
     private final CityMapPanel cityMapPanel;
+    private final EconomyPanel economyPanel;
     private Timer gameTimer;
 
     public MainWindow(GameEngine gameEngine) {
@@ -60,12 +62,13 @@ public class MainWindow extends JFrame implements GameObserver {
         powerPlantPanel = new PowerPlantPanel(gameEngine);
         tabbedPane.addTab("⚡ Centrales", powerPlantPanel);
 
+        // Panneau Économie
+        economyPanel = new EconomyPanel(gameEngine);
+        tabbedPane.addTab("💰 Économie", economyPanel);
+
         // Placeholder pour d'autres onglets
         JPanel residencesPanel = createPlaceholderPanel("🏠 Gestion des résidences - À venir");
         tabbedPane.addTab("🏠 Résidences", residencesPanel);
-
-        JPanel economyPanel = createPlaceholderPanel("💰 Économie et transactions - À venir");
-        tabbedPane.addTab("💰 Économie", economyPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
 
@@ -139,6 +142,8 @@ public class MainWindow extends JFrame implements GameObserver {
             dashboardPanel.refresh();
         } else if (activeTab == powerPlantPanel) {
             powerPlantPanel.refresh();
+        } else if (activeTab == economyPanel) {
+            economyPanel.refresh();
         }
 
         // Mettre à jour la vitesse du timer
