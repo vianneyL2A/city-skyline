@@ -34,21 +34,18 @@ public class TimeManager {
     public TimeCycle advanceTime() {
         TimeCycle completedCycle = TimeCycle.TICK; // Par défaut, pas de jour complet
 
-        // Avancer de 30 secondes par tick
-        currentSecond += 30;
+        // Avancer de 1h30 (90 minutes) par tick
+        currentMinute += 90;
 
-        if (currentSecond >= 60) {
-            currentSecond = 0;
-            currentMinute++;
-        }
-
-        if (currentMinute >= 60) {
-            currentMinute = 0;
+        // Gérer le débordement des minutes
+        while (currentMinute >= 60) {
+            currentMinute -= 60;
             currentHour++;
         }
 
-        if (currentHour >= 24) {
-            currentHour = 0;
+        // Gérer le débordement des heures
+        while (currentHour >= 24) {
+            currentHour -= 24;
             currentDay++;
             completedCycle = TimeCycle.DAY; // Un jour complet est passé
         }
