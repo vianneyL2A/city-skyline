@@ -59,16 +59,19 @@ public class Market {
 
     /**
      * Enregistre une vente d'électricité.
+     * 
+     * @param energySold Quantité d'énergie vendue en kWh
+     * @param revenue    Montant du revenu en €
+     * @param dayInGame  Jour en jeu
      */
-    public int sellEnergy(int amount, int dayInGame) {
-        int revenue = (int) (amount * currentPrice);
-        totalEnergySold += amount;
+    public int sellEnergy(int energySold, int revenue, int dayInGame) {
+        totalEnergySold += energySold;
         totalRevenue += revenue;
 
         transactionHistory.add(new Transaction(
                 Transaction.Type.INCOME,
                 revenue,
-                String.format("Vente de %d kWh", amount),
+                String.format("Vente de %d kWh", energySold),
                 dayInGame));
 
         return revenue;

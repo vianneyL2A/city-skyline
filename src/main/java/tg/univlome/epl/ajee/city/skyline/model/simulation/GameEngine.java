@@ -158,13 +158,16 @@ public class GameEngine implements GameObservable {
      */
     private int collectRevenue() {
         int totalRevenue = 0;
+        int totalEnergySold = 0;
+
         for (Residence residence : city.getResidences()) {
             if (residence.isEnergySupplied()) {
                 int payment = residence.calculateEnergyPayment(market.getCurrentPrice());
                 totalRevenue += payment;
+                totalEnergySold += residence.getEnergyNeed();
             }
         }
-        return market.sellEnergy(totalRevenue, timeManager.getTotalDays());
+        return market.sellEnergy(totalEnergySold, totalRevenue, timeManager.getTotalDays());
     }
 
     /**
