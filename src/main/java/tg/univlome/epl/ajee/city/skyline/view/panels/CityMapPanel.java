@@ -26,6 +26,9 @@ public class CityMapPanel extends JPanel {
     private MapCell selectedCell;
     private BuildTool currentTool;
 
+    // Pour le mode raccordement électrique
+    private MapCell powerLineStart;
+
     // Panneau de détails
     private final JPanel detailsPanel;
     private final JLabel detailsTitle;
@@ -43,6 +46,7 @@ public class CityMapPanel extends JPanel {
         WIND("Éolien", "🌬️", EnergyType.WIND),
         NUCLEAR("Nucléaire", "⚛️", EnergyType.NUCLEAR),
         HYDRO("Hydraulique", "💧", EnergyType.HYDRO),
+        POWER_LINE("Raccordement", "🔌", null),
         DEMOLISH("Démolir", "🗑️", null);
 
         private final String name;
@@ -322,6 +326,7 @@ public class CityMapPanel extends JPanel {
         switch (currentTool) {
             case SELECT -> selectCell(cell);
             case RESIDENCE -> buildResidence(cell);
+            case POWER_LINE -> buildPowerLine(cell);
             case DEMOLISH -> demolish(cell);
             default -> {
                 if (currentTool.getEnergyType() != null) {
@@ -404,6 +409,77 @@ public class CityMapPanel extends JPanel {
         } else {
             JOptionPane.showMessageDialog(this, "Pas assez d'argent!",
                     "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Gère le mode de création de ligne électrique.
+     * 1er clic : sélectionner une centrale
+     * 2ème clic : sélectionner une résidence non alimentée
+     */
+    private void buildPowerLine(MapCell cell) {
+        // Si pas de point de départ sélectionné
+        if (powerLineStart == null) {
+            // Vérifier que c'est une centrale opérationnelle
+            if (!cell.isPowerPlant()) {
+                JOptionPane.showMessageDialog(this,
+                        "🔌 Étape 1: Cliquez d'abord sur une centrale électrique",
+                        "Raccordement", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            if (cell.getPowerPlant() == null || !cell.getPowerPlant().isOperational()) {
+                JOptionPane.showMessageDialog(this,
+                        "⚠️ Cette centrale n'est pas opérationnelle!",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Sauvegarder le point de départ
+            powerLineStart = cell;
+            selectedCell = cell;
+            updateDetails(cell);
+            JOptionPane.showMessageDialog(this,
+                    "✅ Centrale sélectionnée!\n\n🔌 Étape 2: Cliquez maintenant sur une résidence\nnon alimentée pour créer le raccordement.",
+                    "Raccordement", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            // Deuxième clic - doit être une résidence
+            if (!cell.isResidence()) {
+                JOptionPane.showMessageDialog(this,
+                        "❌ Cliquez sur une résidence pour créer le raccordement.\n\n(Clic droit pour annuler)",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Vérifier si la résidence est déjà alimentée
+            if (cell.isPowered()) {
+                JOptionPane.showMessageDialog(this,
+                        "✅ Cette résidence est déjà alimentée!",
+                        "Information", JOptionPane.INFORMATION_MESSAGE);
+                powerLineStart = null;
+                return;
+            }
+
+            // Créer la ligne électrique automatiquement
+            var electricityGrid = cityMap.getElectricityGrid();
+            var powerLine = electricityGrid.createAutoLine(
+                    powerLineStart.getX(), powerLineStart.getY(),
+                    cell.getX(), cell.getY());
+
+            if (powerLine != null && electricityGrid.addPowerLine(powerLine)) {
+                JOptionPane.showMessageDialog(this,
+                        "🔌 Raccordement créé avec succès!\n\nLa résidence est maintenant alimentée.",
+                        "Succès", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "❌ Impossible de créer le raccordement.\n\n" +
+                                "Vérifiez qu'il n'y a pas d'obstacles (cours d'eau)\nentre la centrale et la résidence.",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+
+            // Réinitialiser
+            powerLineStart = null;
+            selectedCell = null;
         }
     }
 
