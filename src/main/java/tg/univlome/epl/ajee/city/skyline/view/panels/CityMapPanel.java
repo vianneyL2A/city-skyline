@@ -9,9 +9,12 @@ import tg.univlome.epl.ajee.city.skyline.model.simulation.GameEngine;
 import tg.univlome.epl.ajee.city.skyline.view.styles.Colors;
 import tg.univlome.epl.ajee.city.skyline.view.styles.Theme;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 /**
  * Panneau affichant la carte de la ville en grille 2D.
@@ -20,6 +23,10 @@ public class CityMapPanel extends JPanel {
 
     private static final int CELL_SIZE = 40;
     private static final int GRID_LINE_WIDTH = 1;
+
+    // Tuiles de terrain
+    private BufferedImage groundTile;
+    private BufferedImage waterTile;
 
     private final GameEngine gameEngine;
     private final CityMap cityMap;
@@ -72,6 +79,9 @@ public class CityMapPanel extends JPanel {
         this.gameEngine = gameEngine;
         this.cityMap = new CityMap();
         this.currentTool = BuildTool.SELECT;
+
+        // Charger les tuiles de terrain
+        loadTiles();
 
         setLayout(new BorderLayout(10, 10));
         setBackground(Colors.BACKGROUND);
@@ -185,6 +195,32 @@ public class CityMapPanel extends JPanel {
         return toolbar;
     }
 
+    /**
+     * Charge les images de tuiles pour le terrain et l'eau.
+     */
+    private void loadTiles() {
+        try {
+            groundTile = ImageIO
+                    .read(getClass().getResourceAsStream("/tg/univlome/epl/ajee/city/skyline/view/tuiles/ground.png"));
+            waterTile = ImageIO
+                    .read(getClass().getResourceAsStream("/tg/univlome/epl/ajee/city/skyline/view/tuiles/water.png"));
+        } catch (IOException | IllegalArgumentException e) {
+            System.err.println("Erreur lors du chargement des tuiles: " + e.getMessage());
+            // Fallback: créer des images de couleur unie
+            groundTile = new BufferedImage(CELL_SIZE, CELL_SIZE, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = groundTile.createGraphics();
+            g.setColor(new Color(140, 190, 110));
+            g.fillRect(0, 0, CELL_SIZE, CELL_SIZE);
+            g.dispose();
+
+            waterTile = new BufferedImage(CELL_SIZE, CELL_SIZE, BufferedImage.TYPE_INT_RGB);
+            g = waterTile.createGraphics();
+            g.setColor(new Color(65, 135, 215));
+            g.fillRect(0, 0, CELL_SIZE, CELL_SIZE);
+            g.dispose();
+        }
+    }
+
     private void updateCursor() {
         if (currentTool == BuildTool.DEMOLISH) {
             setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
@@ -242,20 +278,27 @@ public class CityMapPanel extends JPanel {
         int px = cell.getX() * CELL_SIZE;
         int py = cell.getY() * CELL_SIZE;
 
-        // Couleur de fond
-        Color bgColor = switch (cell.getType()) {
-            case EMPTY -> cell.isWater() ? new Color(100, 150, 230) : new Color(200, 230, 200); // Bleu pour eau, vert
-                                                                                                // pour terrain
-            case RESIDENCE -> cell.isPowered() ? Colors.INFO : Colors.ERROR;
-            case POWER_PLANT -> getPlantColor(cell.getPowerPlant());
-            case POWER_LINE -> new Color(255, 200, 100); // Orange pour les lignes électriques
-        };
+        // Dessiner la tuile de fond (terrain ou eau) pour toutes les cellules
+        BufferedImage baseTile = cell.isWater() ? waterTile : groundTile;
+        if (baseTile != null) {
+            g2d.drawImage(baseTile, px, py, CELL_SIZE, CELL_SIZE, null);
+        }
 
-        g2d.setColor(bgColor);
-        g2d.fillRect(px + 1, py + 1, CELL_SIZE - 1, CELL_SIZE - 1);
-
-        // Icône
+        // Pour les cellules non vides, dessiner une superposition semi-transparente
         if (!cell.isEmpty()) {
+            Color overlayColor = switch (cell.getType()) {
+                case EMPTY -> null;
+                case RESIDENCE -> cell.isPowered() ? new Color(33, 150, 243, 180) : new Color(244, 67, 54, 180);
+                case POWER_PLANT -> withAlpha(getPlantColor(cell.getPowerPlant()), 200);
+                case POWER_LINE -> new Color(255, 200, 100, 180);
+            };
+
+            if (overlayColor != null) {
+                g2d.setColor(overlayColor);
+                g2d.fillRoundRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6, 8, 8);
+            }
+
+            // Icône
             g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
             g2d.setColor(Colors.TEXT_ON_PRIMARY);
             String icon = getCellIcon(cell);
@@ -264,6 +307,15 @@ public class CityMapPanel extends JPanel {
             int textY = py + (CELL_SIZE + fm.getAscent()) / 2 - 2;
             g2d.drawString(icon, textX, textY);
         }
+    }
+
+    /**
+     * Retourne une couleur avec une transparence alpha spécifique.
+     */
+    private Color withAlpha(Color color, int alpha) {
+        if (color == null)
+            return new Color(128, 128, 128, alpha);
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
     }
 
     private Color getPlantColor(PowerPlant plant) {
