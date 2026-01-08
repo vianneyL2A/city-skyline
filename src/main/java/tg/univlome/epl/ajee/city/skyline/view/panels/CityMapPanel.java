@@ -28,6 +28,9 @@ public class CityMapPanel extends JPanel {
     private BufferedImage groundTile;
     private BufferedImage waterTile;
 
+    // Tuiles des résidences par niveau
+    private java.util.Map<ResidenceLevel, BufferedImage> residenceTiles;
+
     private final GameEngine gameEngine;
     private final CityMap cityMap;
     private MapCell selectedCell;
@@ -196,29 +199,45 @@ public class CityMapPanel extends JPanel {
     }
 
     /**
-     * Charge les images de tuiles pour le terrain et l'eau.
+     * Charge les images de tuiles pour le terrain, l'eau et les résidences.
      */
     private void loadTiles() {
-        try {
-            groundTile = ImageIO
-                    .read(getClass().getResourceAsStream("/tg/univlome/epl/ajee/city/skyline/view/tuiles/ground.png"));
-            waterTile = ImageIO
-                    .read(getClass().getResourceAsStream("/tg/univlome/epl/ajee/city/skyline/view/tuiles/water.png"));
-        } catch (IOException | IllegalArgumentException e) {
-            System.err.println("Erreur lors du chargement des tuiles: " + e.getMessage());
-            // Fallback: créer des images de couleur unie
-            groundTile = new BufferedImage(CELL_SIZE, CELL_SIZE, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = groundTile.createGraphics();
-            g.setColor(new Color(140, 190, 110));
-            g.fillRect(0, 0, CELL_SIZE, CELL_SIZE);
-            g.dispose();
+        String basePath = "/tg/univlome/epl/ajee/city/skyline/view/tuiles/";
 
-            waterTile = new BufferedImage(CELL_SIZE, CELL_SIZE, BufferedImage.TYPE_INT_RGB);
-            g = waterTile.createGraphics();
-            g.setColor(new Color(65, 135, 215));
-            g.fillRect(0, 0, CELL_SIZE, CELL_SIZE);
-            g.dispose();
+        try {
+            groundTile = ImageIO.read(getClass().getResourceAsStream(basePath + "ground.png"));
+            waterTile = ImageIO.read(getClass().getResourceAsStream(basePath + "water.png"));
+        } catch (IOException | IllegalArgumentException e) {
+            System.err.println("Erreur lors du chargement des tuiles terrain: " + e.getMessage());
+            // Fallback: créer des images de couleur unie
+            groundTile = createColorTile(new Color(140, 190, 110));
+            waterTile = createColorTile(new Color(65, 135, 215));
         }
+
+        // Charger les tuiles des résidences
+        residenceTiles = new java.util.HashMap<>();
+        for (ResidenceLevel level : ResidenceLevel.values()) {
+            try {
+                BufferedImage img = ImageIO.read(getClass().getResourceAsStream(basePath + level.getImageName()));
+                if (img != null) {
+                    residenceTiles.put(level, img);
+                }
+            } catch (IOException | IllegalArgumentException e) {
+                System.err.println("Erreur chargement tuile " + level.name() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Crée une tuile de couleur unie (fallback).
+     */
+    private BufferedImage createColorTile(Color color) {
+        BufferedImage img = new BufferedImage(CELL_SIZE, CELL_SIZE, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.setColor(color);
+        g.fillRect(0, 0, CELL_SIZE, CELL_SIZE);
+        g.dispose();
+        return img;
     }
 
     private void updateCursor() {
@@ -284,28 +303,51 @@ public class CityMapPanel extends JPanel {
             g2d.drawImage(baseTile, px, py, CELL_SIZE, CELL_SIZE, null);
         }
 
-        // Pour les cellules non vides, dessiner une superposition semi-transparente
+        // Pour les cellules non vides, dessiner le contenu
         if (!cell.isEmpty()) {
-            Color overlayColor = switch (cell.getType()) {
-                case EMPTY -> null;
-                case RESIDENCE -> cell.isPowered() ? new Color(33, 150, 243, 180) : new Color(244, 67, 54, 180);
-                case POWER_PLANT -> withAlpha(getPlantColor(cell.getPowerPlant()), 200);
-                case POWER_LINE -> new Color(255, 200, 100, 180);
-            };
-
-            if (overlayColor != null) {
-                g2d.setColor(overlayColor);
-                g2d.fillRoundRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6, 8, 8);
+            switch (cell.getType()) {
+                case RESIDENCE -> {
+                    // Dessiner l'image de la résidence selon son niveau
+                    Residence residence = cell.getResidence();
+                    if (residence != null) {
+                        BufferedImage resTile = residenceTiles.get(residence.getLevel());
+                        if (resTile != null) {
+                            g2d.drawImage(resTile, px, py, CELL_SIZE, CELL_SIZE, null);
+                        }
+                        // Indicateur d'alimentation électrique
+                        if (!cell.isPowered()) {
+                            g2d.setColor(new Color(244, 67, 54, 150));
+                            g2d.fillRoundRect(px + 2, py + 2, CELL_SIZE - 4, CELL_SIZE - 4, 6, 6);
+                            // Icône d'erreur
+                            g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+                            g2d.setColor(Color.WHITE);
+                            g2d.drawString("⚡", px + CELL_SIZE - 16, py + 14);
+                        }
+                    }
+                }
+                case POWER_PLANT -> {
+                    Color overlayColor = withAlpha(getPlantColor(cell.getPowerPlant()), 200);
+                    g2d.setColor(overlayColor);
+                    g2d.fillRoundRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6, 8, 8);
+                    // Icône de la centrale
+                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
+                    g2d.setColor(Colors.TEXT_ON_PRIMARY);
+                    String icon = cell.getPowerPlant() != null ? cell.getPowerPlant().getEnergyType().getIcon() : "⚡";
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int textX = px + (CELL_SIZE - fm.stringWidth(icon)) / 2;
+                    int textY = py + (CELL_SIZE + fm.getAscent()) / 2 - 2;
+                    g2d.drawString(icon, textX, textY);
+                }
+                case POWER_LINE -> {
+                    g2d.setColor(new Color(255, 200, 100, 180));
+                    g2d.fillRoundRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6, 8, 8);
+                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
+                    g2d.setColor(Colors.TEXT_ON_PRIMARY);
+                    g2d.drawString("─", px + 12, py + 26);
+                }
+                default -> {
+                }
             }
-
-            // Icône
-            g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
-            g2d.setColor(Colors.TEXT_ON_PRIMARY);
-            String icon = getCellIcon(cell);
-            FontMetrics fm = g2d.getFontMetrics();
-            int textX = px + (CELL_SIZE - fm.stringWidth(icon)) / 2;
-            int textY = py + (CELL_SIZE + fm.getAscent()) / 2 - 2;
-            g2d.drawString(icon, textX, textY);
         }
     }
 
@@ -577,7 +619,7 @@ public class CityMapPanel extends JPanel {
             }
             case RESIDENCE -> {
                 Residence r = cell.getResidence();
-                detailsTitle.setText("🏠 Résidence");
+                detailsTitle.setText(r.getLevel().getIcon() + " " + r.getLevel().getDisplayName());
                 String powerStatus = cell.isPowered()
                         ? (cell.getPowerLevel() == 0 ? "✅ Raccordée"
                                 : "✅ Propagation (niv." + cell.getPowerLevel() + ")")
@@ -588,8 +630,36 @@ public class CityMapPanel extends JPanel {
                                 r.getInhabitantCount(), r.getLevel().getMaxInhabitants(),
                                 powerStatus,
                                 r.getEnergyNeed()));
-                actionButton.setText("⬆️ Améliorer");
-                actionButton.setVisible(true);
+
+                // Configurer le bouton d'amélioration
+                if (r.getLevel().canUpgrade()) {
+                    int cost = r.getLevel().getUpgradeCost();
+                    actionButton.setText("⬆️ Améliorer (" + cost + "€)");
+                    actionButton.setVisible(true);
+                    actionButton.setEnabled(true);
+                    // Supprimer les anciens listeners
+                    for (var listener : actionButton.getActionListeners()) {
+                        actionButton.removeActionListener(listener);
+                    }
+                    // Ajouter le nouveau listener
+                    actionButton.addActionListener(e -> {
+                        if (gameEngine.upgradeResidence(r)) {
+                            JOptionPane.showMessageDialog(this,
+                                    "🎉 Résidence améliorée en " + r.getLevel().getDisplayName() + "!",
+                                    "Succès", JOptionPane.INFORMATION_MESSAGE);
+                            updateDetails(cell);
+                            repaint();
+                        } else {
+                            JOptionPane.showMessageDialog(this,
+                                    "❌ Pas assez d'argent pour améliorer!",
+                                    "Erreur", JOptionPane.ERROR_MESSAGE);
+                        }
+                    });
+                } else {
+                    actionButton.setText("🏆 Niveau maximum");
+                    actionButton.setVisible(true);
+                    actionButton.setEnabled(false);
+                }
             }
             case POWER_PLANT -> {
                 PowerPlant p = cell.getPowerPlant();

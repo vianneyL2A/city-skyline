@@ -253,6 +253,25 @@ public class GameEngine implements GameObservable {
         return false;
     }
 
+    /**
+     * Améliore une résidence existante.
+     */
+    public boolean upgradeResidence(Residence residence) {
+        if (!residence.getLevel().canUpgrade()) {
+            return false;
+        }
+        int cost = residence.getLevel().getUpgradeCost();
+        if (cost > 0 && player.canAfford(cost)) {
+            player.spend(cost);
+            residence.upgrade();
+            market.recordExpense(cost, "Amélioration: " + residence.getName(), timeManager.getTotalDays());
+            notifyObservers(GameEventType.RESIDENCE_UPGRADED, residence);
+            notifyObservers(GameEventType.MONEY_CHANGED, player.getMoney());
+            return true;
+        }
+        return false;
+    }
+
     // === Contrôle du jeu ===
 
     public void pause() {

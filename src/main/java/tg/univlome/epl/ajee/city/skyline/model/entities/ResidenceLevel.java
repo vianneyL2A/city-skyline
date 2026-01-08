@@ -2,27 +2,33 @@ package tg.univlome.epl.ajee.city.skyline.model.entities;
 
 /**
  * Niveaux des résidences avec leurs caractéristiques.
- * Chaque niveau définit des besoins en énergie et un pouvoir d'achat
- * différents.
+ * - BASIC: Petite maison (5 habitants max)
+ * - MEDIUM: Immeuble 4 étages (20 habitants max)
+ * - HIGH: Tour 50 étages (100 habitants max)
  */
 public enum ResidenceLevel {
 
-    BASIC("Basique", 50, 100, 10, 20, 5, 2),
-    STANDARD("Standard", 100, 200, 20, 40, 10, 5),
-    LUXURY("Luxueux", 200, 400, 40, 80, 20, 10),
-    PREMIUM("Premium", 400, 800, 80, 150, 30, 20);
+    BASIC("Maison", "🏠", "residence_basic.png", 50, 100, 10, 20, 5, 2),
+    MEDIUM("Immeuble", "🏢", "residence_medium.png", 150, 300, 30, 60, 20, 4),
+    HIGH("Tour", "🏙️", "residence_high.png", 500, 1000, 80, 150, 100, 8);
 
     private final String displayName;
-    private final int minEnergyNeed; // Consommation minimale d'énergie par cycle
-    private final int maxEnergyNeed; // Consommation maximale d'énergie par cycle
-    private final int minPurchasePower; // Pouvoir d'achat minimum (prix max accepté)
-    private final int maxPurchasePower; // Pouvoir d'achat maximum
-    private final int maxInhabitants; // Nombre maximum d'habitants
-    private final int taxPerInhabitant; // Taxe par habitant par cycle (en €)
+    private final String icon;
+    private final String imageName;
+    private final int minEnergyNeed;
+    private final int maxEnergyNeed;
+    private final int minPurchasePower;
+    private final int maxPurchasePower;
+    private final int maxInhabitants;
+    private final int taxPerInhabitant;
 
-    ResidenceLevel(String displayName, int minEnergyNeed, int maxEnergyNeed,
-            int minPurchasePower, int maxPurchasePower, int maxInhabitants, int taxPerInhabitant) {
+    ResidenceLevel(String displayName, String icon, String imageName,
+            int minEnergyNeed, int maxEnergyNeed,
+            int minPurchasePower, int maxPurchasePower,
+            int maxInhabitants, int taxPerInhabitant) {
         this.displayName = displayName;
+        this.icon = icon;
+        this.imageName = imageName;
         this.minEnergyNeed = minEnergyNeed;
         this.maxEnergyNeed = maxEnergyNeed;
         this.minPurchasePower = minPurchasePower;
@@ -33,6 +39,14 @@ public enum ResidenceLevel {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getImageName() {
+        return imageName;
     }
 
     public int getMinEnergyNeed() {
@@ -55,11 +69,36 @@ public enum ResidenceLevel {
         return maxInhabitants;
     }
 
-    /**
-     * Retourne la taxe par habitant par cycle (en €).
-     * Les habitants ne paient la taxe que s'ils sont alimentés en électricité.
-     */
     public int getTaxPerInhabitant() {
         return taxPerInhabitant;
+    }
+
+    /**
+     * Vérifie si ce niveau peut être amélioré.
+     */
+    public boolean canUpgrade() {
+        return this != HIGH;
+    }
+
+    /**
+     * Retourne le niveau suivant (ou null si niveau max).
+     */
+    public ResidenceLevel getNextLevel() {
+        return switch (this) {
+            case BASIC -> MEDIUM;
+            case MEDIUM -> HIGH;
+            case HIGH -> null;
+        };
+    }
+
+    /**
+     * Retourne le coût d'amélioration vers le niveau suivant.
+     */
+    public int getUpgradeCost() {
+        return switch (this) {
+            case BASIC -> 500;
+            case MEDIUM -> 2000;
+            case HIGH -> 0;
+        };
     }
 }
