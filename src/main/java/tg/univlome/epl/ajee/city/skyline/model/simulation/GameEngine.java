@@ -108,12 +108,8 @@ public class GameEngine implements GameObservable {
         int taxes = calculateTotalTaxFromMap();
         player.earn(taxes);
         if (taxes > 0) {
-            // Enregistrer comme REVENU (pas comme dépense!)
-            market.getTransactionHistory().add(new tg.univlome.epl.ajee.city.skyline.model.economy.Transaction(
-                    tg.univlome.epl.ajee.city.skyline.model.economy.Transaction.Type.INCOME,
-                    taxes,
-                    "💰 Taxes collectées",
-                    timeManager.getTotalDays()));
+            // Enregistrer comme REVENU
+            market.recordIncome(taxes, "💰 Taxes collectées", timeManager.getTotalDays());
         }
 
         notifyObservers(GameEventType.MONEY_CHANGED, player.getMoney());

@@ -8,9 +8,9 @@ package tg.univlome.epl.ajee.city.skyline.model.entities;
  */
 public enum ResidenceLevel {
 
-    BASIC("Maison", "🏠", "residence_basic.png", 50, 100, 10, 20, 5, 2),
-    MEDIUM("Immeuble", "🏢", "residence_medium.png", 150, 300, 30, 60, 20, 4),
-    HIGH("Tour", "🏙️", "residence_high.png", 500, 1000, 80, 150, 100, 8);
+    BASIC("Maison", "🏠", "residence_basic.png", 50, 100, 10, 20, 5, 4),
+    MEDIUM("Immeuble", "🏢", "residence_medium.png", 150, 300, 30, 60, 20, 8),
+    HIGH("Tour", "🏙️", "residence_high.png", 500, 1000, 80, 150, 100, 16);
 
     private final String displayName;
     private final String icon;

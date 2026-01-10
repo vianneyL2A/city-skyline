@@ -88,6 +88,17 @@ public class Market {
                 dayInGame));
     }
 
+    /**
+     * Enregistre un revenu (taxes, etc.).
+     */
+    public void recordIncome(int amount, String description, int dayInGame) {
+        transactionHistory.add(new Transaction(
+                Transaction.Type.INCOME,
+                amount,
+                description,
+                dayInGame));
+    }
+
     public List<Transaction> getTransactionHistory() {
         return new ArrayList<>(transactionHistory);
     }
