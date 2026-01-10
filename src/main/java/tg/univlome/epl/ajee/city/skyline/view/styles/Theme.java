@@ -58,6 +58,8 @@ public final class Theme {
      */
     public static JButton createPrimaryButton(String text) {
         JButton button = new JButton(text);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
         button.setBackground(Colors.PRIMARY);
         button.setForeground(Colors.TEXT_ON_PRIMARY);
         button.setFont(FONT_BODY);
@@ -73,6 +75,8 @@ public final class Theme {
      */
     public static JButton createSecondaryButton(String text) {
         JButton button = new JButton(text);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
         button.setBackground(Colors.SECONDARY);
         button.setForeground(Colors.TEXT_ON_PRIMARY);
         button.setFont(FONT_BODY);

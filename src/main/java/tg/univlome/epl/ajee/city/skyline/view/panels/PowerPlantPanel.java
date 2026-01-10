@@ -48,10 +48,12 @@ public class PowerPlantPanel extends JPanel {
         // Liste des centrales
         plantListPanel = new JPanel();
         plantListPanel.setLayout(new BoxLayout(plantListPanel, BoxLayout.Y_AXIS));
-        plantListPanel.setOpaque(false);
+        plantListPanel.setBackground(Colors.BACKGROUND);
 
         JScrollPane scrollPane = new JScrollPane(plantListPanel);
         scrollPane.setBorder(null);
+        scrollPane.setBackground(Colors.BACKGROUND);
+        scrollPane.getViewport().setBackground(Colors.BACKGROUND);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 

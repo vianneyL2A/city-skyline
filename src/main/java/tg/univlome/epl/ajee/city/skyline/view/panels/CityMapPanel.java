@@ -619,6 +619,12 @@ public class CityMapPanel extends JPanel {
             }
             case RESIDENCE -> {
                 Residence r = cell.getResidence();
+                if (r == null) {
+                    detailsTitle.setText("🏠 Résidence");
+                    detailsInfo.setText("<html>Erreur: résidence non trouvée</html>");
+                    actionButton.setVisible(false);
+                    break;
+                }
                 detailsTitle.setText(r.getLevel().getIcon() + " " + r.getLevel().getDisplayName());
                 String powerStatus = cell.isPowered()
                         ? (cell.getPowerLevel() == 0 ? "✅ Raccordée"
@@ -632,20 +638,22 @@ public class CityMapPanel extends JPanel {
                                 r.getEnergyNeed()));
 
                 // Configurer le bouton d'amélioration
+                // Supprimer les anciens listeners d'abord
+                for (var listener : actionButton.getActionListeners()) {
+                    actionButton.removeActionListener(listener);
+                }
+
                 if (r.getLevel().canUpgrade()) {
                     int cost = r.getLevel().getUpgradeCost();
                     actionButton.setText("⬆️ Améliorer (" + cost + "€)");
                     actionButton.setVisible(true);
                     actionButton.setEnabled(true);
-                    // Supprimer les anciens listeners
-                    for (var listener : actionButton.getActionListeners()) {
-                        actionButton.removeActionListener(listener);
-                    }
                     // Ajouter le nouveau listener
+                    final Residence residence = r;
                     actionButton.addActionListener(e -> {
-                        if (gameEngine.upgradeResidence(r)) {
+                        if (gameEngine.upgradeResidence(residence)) {
                             JOptionPane.showMessageDialog(this,
-                                    "🎉 Résidence améliorée en " + r.getLevel().getDisplayName() + "!",
+                                    "🎉 Résidence améliorée en " + residence.getLevel().getDisplayName() + "!",
                                     "Succès", JOptionPane.INFORMATION_MESSAGE);
                             updateDetails(cell);
                             repaint();
@@ -660,6 +668,8 @@ public class CityMapPanel extends JPanel {
                     actionButton.setVisible(true);
                     actionButton.setEnabled(false);
                 }
+                detailsPanel.revalidate();
+                detailsPanel.repaint();
             }
             case POWER_PLANT -> {
                 PowerPlant p = cell.getPowerPlant();

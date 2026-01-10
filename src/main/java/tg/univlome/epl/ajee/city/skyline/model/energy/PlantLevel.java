@@ -6,10 +6,10 @@ package tg.univlome.epl.ajee.city.skyline.model.energy;
  */
 public enum PlantLevel {
 
-    LEVEL_1("Niveau 1", 1.0, 1.0),
-    LEVEL_2("Niveau 2", 1.5, 1.3),
-    LEVEL_3("Niveau 3", 2.2, 1.6),
-    LEVEL_4("Niveau 4", 3.0, 2.0);
+    LEVEL_1("1", 1.0, 1.0),
+    LEVEL_2("2", 1.5, 1.3),
+    LEVEL_3("3", 2.2, 1.6),
+    LEVEL_4("4", 3.0, 2.0);
 
     private final String displayName;
     private final double productionMultiplier; // Multiplicateur de production
