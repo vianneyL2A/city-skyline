@@ -15,6 +15,7 @@ public class ResourceBar extends JPanel {
     private final JLabel dateLabel;
     private final JLabel productionLabel;
     private final JLabel demandLabel;
+    private final JLabel housingDemandLabel;
     private final JLabel happinessLabel;
     private final JLabel inhabitantsLabel;
 
@@ -37,10 +38,15 @@ public class ResourceBar extends JPanel {
         productionLabel = (JLabel) productionPanel.getComponent(1);
         leftPanel.add(productionPanel);
 
-        // Demande
+        // Demande énergie
         JPanel demandPanel = createInfoPanel("Demande:", "0 kWh");
         demandLabel = (JLabel) demandPanel.getComponent(1);
         leftPanel.add(demandPanel);
+
+        // Demande logement
+        JPanel housingPanel = createInfoPanel("🏠 Demande logement:", "0%");
+        housingDemandLabel = (JLabel) housingPanel.getComponent(1);
+        leftPanel.add(housingPanel);
 
         add(leftPanel, BorderLayout.WEST);
 
@@ -154,6 +160,19 @@ public class ResourceBar extends JPanel {
             productionLabel.setForeground(Colors.SUCCESS);
         } else {
             productionLabel.setForeground(Colors.ERROR);
+        }
+    }
+
+    public void setHousingDemand(int demandPercent) {
+        housingDemandLabel.setText(demandPercent + "%");
+
+        // Colorer selon la demande
+        if (demandPercent > 60) {
+            housingDemandLabel.setForeground(Colors.ERROR); // Haute demande = rouge
+        } else if (demandPercent > 30) {
+            housingDemandLabel.setForeground(Colors.WARNING); // Moyenne = orange
+        } else {
+            housingDemandLabel.setForeground(Colors.SUCCESS); // Basse = vert
         }
     }
 }

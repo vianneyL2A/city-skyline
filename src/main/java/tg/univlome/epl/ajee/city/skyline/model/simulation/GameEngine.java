@@ -24,6 +24,7 @@ public class GameEngine implements GameObservable {
     private final TimeManager timeManager;
     private final EventManager eventManager;
     private GameState state;
+    private tg.univlome.epl.ajee.city.skyline.model.map.CityMap cityMap;
 
     public GameEngine() {
         this.observers = new ArrayList<>();
@@ -33,6 +34,15 @@ public class GameEngine implements GameObservable {
         this.timeManager = new TimeManager();
         this.eventManager = new EventManager();
         this.state = GameState.NOT_STARTED;
+        this.cityMap = null;
+    }
+
+    public void setCityMap(tg.univlome.epl.ajee.city.skyline.model.map.CityMap cityMap) {
+        this.cityMap = cityMap;
+    }
+
+    public tg.univlome.epl.ajee.city.skyline.model.map.CityMap getCityMap() {
+        return cityMap;
     }
 
     @Override
@@ -44,15 +54,8 @@ public class GameEngine implements GameObservable {
      * Initialise une nouvelle partie avec configuration par défaut.
      */
     public void initializeGame() {
-        // Créer quelques résidences initiales
-        for (int i = 0; i < 3; i++) {
-            Residence residence = new Residence("Quartier " + (i + 1), ResidenceLevel.BASIC);
-            // Ajouter des habitants à chaque résidence
-            for (int j = 0; j < 3; j++) {
-                residence.addNewInhabitant();
-            }
-            city.addResidence(residence);
-        }
+        // Le joueur commence sans résidence - il doit les construire sur la carte
+        // Les résidences seront créées via CityMapPanel.buildResidence()
 
         state = GameState.RUNNING;
         notifyObservers(GameEventType.GAME_STARTED);
@@ -102,10 +105,15 @@ public class GameEngine implements GameObservable {
         player.earn(revenue);
 
         // 6. Collecter les taxes des habitants (seulement si alimentés)
-        int taxes = city.calculateTotalTax();
+        int taxes = calculateTotalTaxFromMap();
         player.earn(taxes);
         if (taxes > 0) {
-            market.recordExpense(-taxes, "💰 Taxes collectées", timeManager.getTotalDays());
+            // Enregistrer comme REVENU (pas comme dépense!)
+            market.getTransactionHistory().add(new tg.univlome.epl.ajee.city.skyline.model.economy.Transaction(
+                    tg.univlome.epl.ajee.city.skyline.model.economy.Transaction.Type.INCOME,
+                    taxes,
+                    "💰 Taxes collectées",
+                    timeManager.getTotalDays()));
         }
 
         notifyObservers(GameEventType.MONEY_CHANGED, player.getMoney());
@@ -121,14 +129,20 @@ public class GameEngine implements GameObservable {
         // 8. Mettre à jour le bonheur
         updateHappiness(production, demand);
 
-        // 9. Gérer les événements aléatoires
+        // 9. Croissance de la population (les résidences se remplissent au fil du
+        // temps)
+        if (completedCycle == TimeCycle.DAY || completedCycle == TimeCycle.MONTH || completedCycle == TimeCycle.YEAR) {
+            growPopulation();
+        }
+
+        // 10. Gérer les événements aléatoires
         GameEvent newEvent = eventManager.tryGenerateEvent();
         if (newEvent != null) {
             notifyObservers(GameEventType.RANDOM_EVENT, newEvent);
         }
         eventManager.updateEvents();
 
-        // 10. Vérifier condition de fin
+        // 11. Vérifier condition de fin
         checkGameOver();
     }
 
@@ -136,15 +150,18 @@ public class GameEngine implements GameObservable {
      * Distribue l'énergie aux résidences.
      */
     private void distributeEnergy(int production, int demand) {
+        // Utiliser les résidences de la carte
+        java.util.List<Residence> residences = getResidencesFromMap();
+
         if (production >= demand) {
             // Assez d'énergie pour tout le monde
-            for (Residence residence : city.getResidences()) {
+            for (Residence residence : residences) {
                 residence.setEnergySupplied(true);
             }
         } else {
             // Pas assez d'énergie - distribution proportionnelle
             double ratio = (double) production / demand;
-            for (Residence residence : city.getResidences()) {
+            for (Residence residence : residences) {
                 // Les résidences de niveau supérieur ont priorité
                 double priority = (residence.getLevel().ordinal() + 1) / 4.0;
                 residence.setEnergySupplied(Math.random() < (ratio + priority * 0.2));
@@ -160,7 +177,10 @@ public class GameEngine implements GameObservable {
         int totalRevenue = 0;
         int totalEnergySold = 0;
 
-        for (Residence residence : city.getResidences()) {
+        // Utiliser les résidences de la carte
+        java.util.List<Residence> residences = getResidencesFromMap();
+
+        for (Residence residence : residences) {
             if (residence.isEnergySupplied()) {
                 int payment = residence.calculateEnergyPayment(market.getCurrentPrice());
                 totalRevenue += payment;
@@ -168,6 +188,31 @@ public class GameEngine implements GameObservable {
             }
         }
         return market.sellEnergy(totalEnergySold, totalRevenue, timeManager.getTotalDays());
+    }
+
+    /**
+     * Retourne les résidences de la carte.
+     */
+    private java.util.List<Residence> getResidencesFromMap() {
+        if (cityMap != null) {
+            java.util.List<Residence> residences = new java.util.ArrayList<>();
+            for (var cell : cityMap.getResidenceCells()) {
+                if (cell.getResidence() != null) {
+                    residences.add(cell.getResidence());
+                }
+            }
+            return residences;
+        }
+        return city.getResidences();
+    }
+
+    /**
+     * Calcule les taxes totales depuis la carte.
+     */
+    private int calculateTotalTaxFromMap() {
+        return getResidencesFromMap().stream()
+                .mapToInt(Residence::calculateTax)
+                .sum();
     }
 
     /**
@@ -201,6 +246,54 @@ public class GameEngine implements GameObservable {
 
         if (city.isHappinessCritical()) {
             notifyObservers(GameEventType.HAPPINESS_CRITICAL, city.getGlobalHappiness());
+        }
+    }
+
+    /**
+     * Fait croître la population dans les résidences.
+     * Chaque jour, les résidences qui ne sont pas pleines
+     * ont une chance de recevoir un nouvel habitant.
+     */
+    private void growPopulation() {
+        int happiness = city.getGlobalHappiness();
+
+        // Utiliser les résidences de la carte si disponible, sinon celles de City
+        java.util.List<Residence> residences;
+        if (cityMap != null) {
+            residences = new java.util.ArrayList<>();
+            for (var cell : cityMap.getResidenceCells()) {
+                if (cell.getResidence() != null) {
+                    residences.add(cell.getResidence());
+                }
+            }
+        } else {
+            residences = city.getResidences();
+        }
+
+        for (Residence residence : residences) {
+            // Si la résidence est pleine, pas de croissance
+            if (residence.isFull()) {
+                continue;
+            }
+
+            // Probabilité de croissance basée sur le bonheur global
+            // Plus le bonheur est élevé, plus la probabilité est grande
+            double growthChance = 0.3 + (happiness / 100.0) * 0.5; // 30% à 80% selon le bonheur
+
+            // Bonus si la résidence est alimentée en électricité
+            if (residence.isEnergySupplied()) {
+                growthChance += 0.2;
+            }
+
+            // Bonus pour les résidences de niveau supérieur (plus attractives)
+            growthChance += residence.getLevel().ordinal() * 0.1;
+
+            // Cap à 100%
+            growthChance = Math.min(1.0, growthChance);
+
+            if (Math.random() < growthChance) {
+                residence.addNewInhabitant();
+            }
         }
     }
 

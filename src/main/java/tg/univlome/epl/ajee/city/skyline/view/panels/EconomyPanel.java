@@ -230,16 +230,24 @@ public class EconomyPanel extends JPanel {
         moneyLabel.setText(String.format("%,d €", currentMoney));
         moneyLabel.setForeground(currentMoney >= 0 ? Colors.SUCCESS : Colors.ERROR);
 
-        // Calculer les revenus du cycle
-        int energyRevenue = city.getResidences().stream()
-                .filter(r -> r.isEnergySupplied())
-                .mapToInt(r -> r.calculateEnergyPayment(market.getCurrentPrice()))
-                .sum();
+        // Calculer les revenus du cycle depuis les résidences de la carte
+        int energyRevenue = 0;
+        int taxes = 0;
+        if (gameEngine.getCityMap() != null) {
+            for (var cell : gameEngine.getCityMap().getResidenceCells()) {
+                var residence = cell.getResidence();
+                if (residence != null) {
+                    if (residence.isEnergySupplied()) {
+                        energyRevenue += residence.calculateEnergyPayment(market.getCurrentPrice());
+                    }
+                    taxes += residence.calculateTax();
+                }
+            }
+        }
         revenueLabel.setText(String.format("+%,d €", energyRevenue));
         revenueLabel.setForeground(Colors.SUCCESS);
 
         // Taxes
-        int taxes = city.calculateTotalTax();
         taxLabel.setText(String.format("+%,d €", taxes));
         taxLabel.setForeground(taxes > 0 ? Colors.SUCCESS : Colors.TEXT_SECONDARY);
 

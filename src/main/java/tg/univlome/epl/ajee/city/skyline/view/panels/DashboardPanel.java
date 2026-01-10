@@ -26,6 +26,7 @@ public class DashboardPanel extends JPanel {
     private final JLabel demandLabel;
     private final JLabel balanceLabel;
     private final JLabel priceLabel;
+    private final JLabel housingDemandLabel;
 
     public DashboardPanel(GameEngine gameEngine) {
         this.gameEngine = gameEngine;
@@ -33,11 +34,22 @@ public class DashboardPanel extends JPanel {
         setBackground(Colors.BACKGROUND);
         setBorder(Theme.BORDER_PADDING_LARGE);
 
-        // Titre
+        // Titre avec indicateur de demande de logement à droite
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         cityNameLabel = Theme.createTitleLabel("🏙️ Ma Ville");
         headerPanel.add(cityNameLabel, BorderLayout.WEST);
+
+        // Indicateur de demande de logement à droite
+        JPanel demandPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        demandPanel.setOpaque(false);
+        JLabel demandTitleLabel = Theme.createBodyLabel("🏠 Demande logement:");
+        demandPanel.add(demandTitleLabel);
+        housingDemandLabel = Theme.createHeaderLabel("0%");
+        housingDemandLabel.setForeground(Colors.PRIMARY);
+        demandPanel.add(housingDemandLabel);
+        headerPanel.add(demandPanel, BorderLayout.EAST);
+
         add(headerPanel, BorderLayout.NORTH);
 
         // Contenu principal
@@ -124,5 +136,37 @@ public class DashboardPanel extends JPanel {
         priceLabel.setText(gameEngine.getMarket().formatPrice());
 
         happinessGauge.setValue(city.getGlobalHappiness());
+
+        // Calcul de la demande de logement depuis la carte
+        int totalCapacity = 0;
+        int totalInhabitants = 0;
+        if (gameEngine.getCityMap() != null) {
+            for (var cell : gameEngine.getCityMap().getResidenceCells()) {
+                var residence = cell.getResidence();
+                if (residence != null) {
+                    totalCapacity += residence.getLevel().getMaxInhabitants();
+                    totalInhabitants += residence.getInhabitantCount();
+                }
+            }
+        }
+
+        if (totalCapacity > 0) {
+            int occupancyRate = (totalInhabitants * 100) / totalCapacity;
+            // La demande est inverse du taux d'occupation
+            int housingDemand = Math.max(0, 100 - occupancyRate);
+            housingDemandLabel.setText(housingDemand + "%");
+
+            // Couleur selon la demande
+            if (housingDemand > 60) {
+                housingDemandLabel.setForeground(Colors.ERROR); // Haute demande = rouge
+            } else if (housingDemand > 30) {
+                housingDemandLabel.setForeground(Colors.WARNING); // Moyenne = orange
+            } else {
+                housingDemandLabel.setForeground(Colors.SUCCESS); // Basse = vert
+            }
+        } else {
+            housingDemandLabel.setText("N/A");
+            housingDemandLabel.setForeground(Colors.TEXT_SECONDARY);
+        }
     }
 }

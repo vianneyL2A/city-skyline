@@ -174,7 +174,15 @@ public class PowerPlantPanel extends JPanel {
     public void refresh() {
         plantListPanel.removeAll();
 
-        List<PowerPlant> plants = gameEngine.getCity().getPowerPlants();
+        // Récupérer les centrales depuis la carte
+        java.util.List<PowerPlant> plants = new java.util.ArrayList<>();
+        if (gameEngine.getCityMap() != null) {
+            for (var cell : gameEngine.getCityMap().getPowerPlantCells()) {
+                if (cell.getPowerPlant() != null) {
+                    plants.add(cell.getPowerPlant());
+                }
+            }
+        }
 
         if (plants.isEmpty()) {
             JLabel emptyLabel = Theme

@@ -86,6 +86,9 @@ public class CityMapPanel extends JPanel {
         this.cityMap = new CityMap();
         this.currentTool = BuildTool.SELECT;
 
+        // Lier la carte au GameEngine pour la croissance de population
+        gameEngine.setCityMap(cityMap);
+
         // Charger les tuiles de terrain
         loadTiles();
 
@@ -620,9 +623,9 @@ public class CityMapPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             if (cell.isResidence() && cell.getResidence() != null) {
-                gameEngine.getCity().getResidences().remove(cell.getResidence());
+                gameEngine.getCity().removeResidence(cell.getResidence());
             } else if (cell.isPowerPlant() && cell.getPowerPlant() != null) {
-                gameEngine.getCity().getPowerPlants().remove(cell.getPowerPlant());
+                gameEngine.getCity().removePowerPlant(cell.getPowerPlant());
             }
             cityMap.clearCell(cell.getX(), cell.getY());
             selectedCell = null;

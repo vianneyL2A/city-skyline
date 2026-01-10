@@ -134,6 +134,26 @@ public class MainWindow extends JFrame implements GameObserver {
         resourceBar.setHappiness(gameEngine.getCity().getGlobalHappiness());
         resourceBar.setInhabitants(gameEngine.getCity().getTotalInhabitants());
 
+        // Calculer et afficher la demande de logement depuis la carte
+        int totalCapacity = 0;
+        int totalInhabitants = 0;
+        if (gameEngine.getCityMap() != null) {
+            for (var cell : gameEngine.getCityMap().getResidenceCells()) {
+                var residence = cell.getResidence();
+                if (residence != null) {
+                    totalCapacity += residence.getLevel().getMaxInhabitants();
+                    totalInhabitants += residence.getInhabitantCount();
+                }
+            }
+        }
+        if (totalCapacity > 0) {
+            int occupancyRate = (totalInhabitants * 100) / totalCapacity;
+            int housingDemand = Math.max(0, 100 - occupancyRate);
+            resourceBar.setHousingDemand(housingDemand);
+        } else {
+            resourceBar.setHousingDemand(0);
+        }
+
         // Mettre à jour l'onglet actif
         Component activeTab = tabbedPane.getSelectedComponent();
         if (activeTab == cityMapPanel) {
