@@ -202,19 +202,26 @@ public class CityMap {
 
     /**
      * Place une centrale à la position donnée.
-     * Vérifie que le terrain est constructible.
-     * Pour les centrales hydrauliques, vérifie qu'elles sont adjacentes à l'eau.
+     * Pour les centrales hydrauliques, elles doivent être sur l'eau.
+     * Pour les autres centrales, elles doivent être sur terrain constructible.
      */
     public boolean placePowerPlant(int x, int y, PowerPlant powerPlant) {
         MapCell cell = getCell(x, y);
-        if (cell == null || !cell.isEmpty() || !cell.isConstructible()) {
+        if (cell == null || !cell.isEmpty()) {
             return false;
         }
 
-        // Vérification spéciale pour les centrales hydrauliques
-        if (powerPlant.getEnergyType() == tg.univlome.epl.ajee.city.skyline.model.energy.EnergyType.HYDRO) {
-            if (!isAdjacentToWater(x, y)) {
-                return false; // Doit être à côté de l'eau
+        boolean isHydro = powerPlant.getEnergyType() == tg.univlome.epl.ajee.city.skyline.model.energy.EnergyType.HYDRO;
+
+        if (isHydro) {
+            // Les centrales hydrauliques DOIVENT être sur l'eau
+            if (!cell.isWater()) {
+                return false;
+            }
+        } else {
+            // Les autres centrales DOIVENT être sur terrain constructible (pas l'eau)
+            if (!cell.isConstructible()) {
+                return false;
             }
         }
 

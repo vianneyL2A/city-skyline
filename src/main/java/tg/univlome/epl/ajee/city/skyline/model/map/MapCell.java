@@ -134,14 +134,26 @@ public class MapCell {
 
     /**
      * Place une centrale sur cette cellule.
+     * Les centrales hydrauliques peuvent être placées sur l'eau.
+     * Les autres centrales ne peuvent être placées que sur terrain constructible.
      * 
-     * @return true si la centrale a été placée, false si le terrain n'est pas
-     *         constructible
+     * @return true si la centrale a été placée, false sinon
      */
     public boolean setPowerPlant(PowerPlant powerPlant) {
-        if (!isConstructible()) {
-            return false;
+        boolean isHydro = powerPlant.getEnergyType() == tg.univlome.epl.ajee.city.skyline.model.energy.EnergyType.HYDRO;
+
+        if (isHydro) {
+            // Les centrales hydrauliques ne peuvent être placées que sur l'eau
+            if (!isWater()) {
+                return false;
+            }
+        } else {
+            // Les autres centrales ne peuvent être placées que sur terrain constructible
+            if (!isConstructible()) {
+                return false;
+            }
         }
+
         this.powerPlant = powerPlant;
         this.residence = null;
         this.type = CellType.POWER_PLANT;

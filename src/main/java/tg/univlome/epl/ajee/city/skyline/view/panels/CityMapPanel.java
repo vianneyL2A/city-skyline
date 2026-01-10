@@ -495,18 +495,23 @@ public class CityMapPanel extends JPanel {
             return;
         }
 
-        if (cell.isWater()) {
-            JOptionPane.showMessageDialog(this, "Impossible de construire sur l'eau!",
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Vérification spéciale pour les centrales hydrauliques
-        if (type == EnergyType.HYDRO && !cityMap.isAdjacentToWater(cell.getX(), cell.getY())) {
-            JOptionPane.showMessageDialog(this,
-                    "💧 Les centrales hydrauliques doivent être construites\nà côté d'un cours d'eau!",
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
+        // Règles de construction selon le type de centrale
+        if (type == EnergyType.HYDRO) {
+            // Les centrales hydrauliques DOIVENT être construites sur l'eau
+            if (!cell.isWater()) {
+                JOptionPane.showMessageDialog(this,
+                        "💧 Les centrales hydrauliques doivent être construites\ndirectement sur un cours d'eau!",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        } else {
+            // Les autres centrales NE PEUVENT PAS être construites sur l'eau
+            if (cell.isWater()) {
+                JOptionPane.showMessageDialog(this,
+                        "Impossible de construire sur l'eau!\nSeules les centrales hydrauliques peuvent y être placées.",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
         }
 
         PowerPlant plant = switch (type) {
