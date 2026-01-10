@@ -31,6 +31,9 @@ public class CityMapPanel extends JPanel {
     // Tuiles des résidences par niveau
     private java.util.Map<ResidenceLevel, BufferedImage> residenceTiles;
 
+    // Tuiles des centrales par type d'énergie
+    private java.util.Map<EnergyType, BufferedImage> powerPlantTiles;
+
     private final GameEngine gameEngine;
     private final CityMap cityMap;
     private MapCell selectedCell;
@@ -199,7 +202,8 @@ public class CityMapPanel extends JPanel {
     }
 
     /**
-     * Charge les images de tuiles pour le terrain, l'eau et les résidences.
+     * Charge les images de tuiles pour le terrain, l'eau, les résidences et les
+     * centrales.
      */
     private void loadTiles() {
         String basePath = "/tg/univlome/epl/ajee/city/skyline/view/tuiles/";
@@ -224,6 +228,22 @@ public class CityMapPanel extends JPanel {
                 }
             } catch (IOException | IllegalArgumentException e) {
                 System.err.println("Erreur chargement tuile " + level.name() + ": " + e.getMessage());
+            }
+        }
+
+        // Charger les tuiles des centrales électriques
+        powerPlantTiles = new java.util.HashMap<>();
+        for (EnergyType type : EnergyType.values()) {
+            try {
+                var stream = getClass().getResourceAsStream(basePath + type.getImageName());
+                if (stream != null) {
+                    BufferedImage img = ImageIO.read(stream);
+                    if (img != null) {
+                        powerPlantTiles.put(type, img);
+                    }
+                }
+            } catch (IOException | IllegalArgumentException e) {
+                System.err.println("Erreur chargement tuile centrale " + type.name() + ": " + e.getMessage());
             }
         }
     }
@@ -326,17 +346,25 @@ public class CityMapPanel extends JPanel {
                     }
                 }
                 case POWER_PLANT -> {
-                    Color overlayColor = withAlpha(getPlantColor(cell.getPowerPlant()), 200);
-                    g2d.setColor(overlayColor);
-                    g2d.fillRoundRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6, 8, 8);
-                    // Icône de la centrale
-                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
-                    g2d.setColor(Colors.TEXT_ON_PRIMARY);
-                    String icon = cell.getPowerPlant() != null ? cell.getPowerPlant().getEnergyType().getIcon() : "⚡";
-                    FontMetrics fm = g2d.getFontMetrics();
-                    int textX = px + (CELL_SIZE - fm.stringWidth(icon)) / 2;
-                    int textY = py + (CELL_SIZE + fm.getAscent()) / 2 - 2;
-                    g2d.drawString(icon, textX, textY);
+                    PowerPlant plant = cell.getPowerPlant();
+                    if (plant != null) {
+                        BufferedImage plantTile = powerPlantTiles.get(plant.getEnergyType());
+                        if (plantTile != null) {
+                            g2d.drawImage(plantTile, px, py, CELL_SIZE, CELL_SIZE, null);
+                        } else {
+                            // Fallback: overlay coloré avec icône
+                            Color overlayColor = withAlpha(getPlantColor(plant), 200);
+                            g2d.setColor(overlayColor);
+                            g2d.fillRoundRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6, 8, 8);
+                            g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
+                            g2d.setColor(Colors.TEXT_ON_PRIMARY);
+                            String icon = plant.getEnergyType().getIcon();
+                            FontMetrics fm = g2d.getFontMetrics();
+                            int textX = px + (CELL_SIZE - fm.stringWidth(icon)) / 2;
+                            int textY = py + (CELL_SIZE + fm.getAscent()) / 2 - 2;
+                            g2d.drawString(icon, textX, textY);
+                        }
+                    }
                 }
                 case POWER_LINE -> {
                     g2d.setColor(new Color(255, 200, 100, 180));

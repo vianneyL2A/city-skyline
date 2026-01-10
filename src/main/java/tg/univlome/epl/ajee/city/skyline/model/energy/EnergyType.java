@@ -6,20 +6,22 @@ package tg.univlome.epl.ajee.city.skyline.model.energy;
  */
 public enum EnergyType {
 
-    COAL("Charbon", "🏭", 0.8, 0.3), // Haute pollution, fiable
-    SOLAR("Solaire", "☀️", 0.0, 0.6), // Écologique, variable
-    WIND("Éolien", "🌬️", 0.0, 0.5), // Écologique, variable
-    NUCLEAR("Nucléaire", "⚛️", 0.1, 0.9), // Quasi-propre, très fiable
-    HYDRO("Hydraulique", "💧", 0.0, 0.85); // Écologique, fiable
+    COAL("Charbon", "🏭", "plant_coal.png", 0.8, 0.3),
+    SOLAR("Solaire", "☀️", "plant_solar.png", 0.0, 0.6),
+    WIND("Éolien", "🌬️", "plant_wind.png", 0.0, 0.5),
+    NUCLEAR("Nucléaire", "⚛️", "plant_nuclear.png", 0.1, 0.9),
+    HYDRO("Hydraulique", "💧", "plant_hydro.png", 0.0, 0.85);
 
     private final String displayName;
     private final String icon;
-    private final double pollutionFactor; // 0.0 = propre, 1.0 = très polluant
-    private final double reliability; // 0.0 = très variable, 1.0 = constant
+    private final String imageName;
+    private final double pollutionFactor;
+    private final double reliability;
 
-    EnergyType(String displayName, String icon, double pollutionFactor, double reliability) {
+    EnergyType(String displayName, String icon, String imageName, double pollutionFactor, double reliability) {
         this.displayName = displayName;
         this.icon = icon;
+        this.imageName = imageName;
         this.pollutionFactor = pollutionFactor;
         this.reliability = reliability;
     }
@@ -30,6 +32,10 @@ public enum EnergyType {
 
     public String getIcon() {
         return icon;
+    }
+
+    public String getImageName() {
+        return imageName;
     }
 
     public double getPollutionFactor() {
