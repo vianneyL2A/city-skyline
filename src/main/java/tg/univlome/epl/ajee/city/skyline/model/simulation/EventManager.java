@@ -109,4 +109,12 @@ public class EventManager {
     public int getActiveEventCount() {
         return activeEvents.size();
     }
+
+    /**
+     * Réinitialise les événements pour une nouvelle partie.
+     */
+    public void reset() {
+        this.activeEvents.clear();
+        this.eventHistory.clear();
+    }
 }

@@ -121,6 +121,16 @@ public class Market {
         return String.format("%.2f€/kWh", currentPrice);
     }
 
+    /**
+     * Réinitialise le marché pour une nouvelle partie.
+     */
+    public void reset() {
+        this.currentPrice = Constants.BASE_ELECTRICITY_PRICE;
+        this.transactionHistory.clear();
+        this.totalEnergySold = 0;
+        this.totalRevenue = 0;
+    }
+
     @Override
     public String toString() {
         return String.format("Marché | Prix: %s | Total vendu: %d kWh | Revenus: %d€",

@@ -174,6 +174,15 @@ public class City {
         return calculateEnergyBalance() >= 0;
     }
 
+    /**
+     * Réinitialise la ville pour une nouvelle partie.
+     */
+    public void reset() {
+        this.residences.clear();
+        this.powerPlants.clear();
+        this.globalHappiness = Constants.INITIAL_HAPPINESS;
+    }
+
     @Override
     public String toString() {
         return String.format("Ville: %s | %d résidences | %d centrales | %d habitants | Bonheur: %d%%",

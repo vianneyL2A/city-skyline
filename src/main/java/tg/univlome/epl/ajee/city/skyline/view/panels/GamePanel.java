@@ -1,15 +1,10 @@
-package tg.univlome.epl.ajee.city.skyline.view;
+package tg.univlome.epl.ajee.city.skyline.view.panels;
 
 import tg.univlome.epl.ajee.city.skyline.model.simulation.GameEngine;
 import tg.univlome.epl.ajee.city.skyline.observer.GameEventType;
 import tg.univlome.epl.ajee.city.skyline.observer.GameObserver;
-import tg.univlome.epl.ajee.city.skyline.utils.Constants;
 import tg.univlome.epl.ajee.city.skyline.view.components.ResourceBar;
 import tg.univlome.epl.ajee.city.skyline.view.components.TimeControlBar;
-import tg.univlome.epl.ajee.city.skyline.view.panels.CityMapPanel;
-import tg.univlome.epl.ajee.city.skyline.view.panels.DashboardPanel;
-import tg.univlome.epl.ajee.city.skyline.view.panels.EconomyPanel;
-import tg.univlome.epl.ajee.city.skyline.view.panels.PowerPlantPanel;
 import tg.univlome.epl.ajee.city.skyline.view.styles.Colors;
 import tg.univlome.epl.ajee.city.skyline.view.styles.Theme;
 
@@ -17,9 +12,9 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Fenêtre principale du jeu EnergyTycoon.
+ * Panneau principal du jeu (utilisé dans le CardLayout).
  */
-public class MainWindow extends JFrame implements GameObserver {
+public class GamePanel extends JPanel implements GameObserver {
 
     private final GameEngine gameEngine;
     private final ResourceBar resourceBar;
@@ -32,22 +27,10 @@ public class MainWindow extends JFrame implements GameObserver {
     private Timer gameTimer;
     private Runnable onReturnToMenu;
 
-    public MainWindow(GameEngine gameEngine) {
-        this(gameEngine, null);
-    }
-
-    public MainWindow(GameEngine gameEngine, Runnable onReturnToMenu) {
-        super(Constants.GAME_TITLE);
+    public GamePanel(GameEngine gameEngine, Runnable onReturnToMenu) {
         this.gameEngine = gameEngine;
         this.onReturnToMenu = onReturnToMenu;
 
-        // Configuration de la fenêtre
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
-        setMinimumSize(new Dimension(1024, 600));
-        setLocationRelativeTo(null);
-
-        // Layout principal
         setLayout(new BorderLayout());
 
         // Barre de ressources (haut)
@@ -128,6 +111,15 @@ public class MainWindow extends JFrame implements GameObserver {
     }
 
     /**
+     * Arrête le timer du jeu.
+     */
+    public void stopTimer() {
+        if (gameTimer != null) {
+            gameTimer.stop();
+        }
+    }
+
+    /**
      * Rafraîchit toute l'interface.
      */
     public void refreshAll() {
@@ -196,14 +188,15 @@ public class MainWindow extends JFrame implements GameObserver {
 
         String[] options;
         if (onReturnToMenu != null) {
-            options = new String[] { "Menu Principal", "Fermer" };
+            options = new String[] { "🏠 Menu Principal", "❌ Quitter" };
         } else {
             options = new String[] { "OK" };
         }
 
-        int choice = JOptionPane.showOptionDialog(this,
-                message + "\n\nJours survécus: " + gameEngine.getPlayer().getDaysSurvived(),
-                "Game Over",
+        int choice = JOptionPane.showOptionDialog(
+                SwingUtilities.getWindowAncestor(this),
+                message + "\n\n🗓️ Jours survécus: " + gameEngine.getPlayer().getDaysSurvived(),
+                "💀 Game Over",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.ERROR_MESSAGE,
                 null,
@@ -212,12 +205,15 @@ public class MainWindow extends JFrame implements GameObserver {
 
         if (choice == 0 && onReturnToMenu != null) {
             onReturnToMenu.run();
+        } else if (choice == 1) {
+            System.exit(0);
         }
     }
 
     private void showEventNotification(Object data) {
         if (data != null) {
-            JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(
+                    SwingUtilities.getWindowAncestor(this),
                     data.toString(),
                     "📢 Événement",
                     JOptionPane.INFORMATION_MESSAGE);
@@ -225,6 +221,8 @@ public class MainWindow extends JFrame implements GameObserver {
     }
 
     private void showWarningNotification(String title, String message) {
-        JOptionPane.showMessageDialog(this, message, title, JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(
+                SwingUtilities.getWindowAncestor(this),
+                message, title, JOptionPane.WARNING_MESSAGE);
     }
 }

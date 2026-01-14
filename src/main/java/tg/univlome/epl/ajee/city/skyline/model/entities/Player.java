@@ -38,6 +38,20 @@ public class Player {
         return money;
     }
 
+    public void setMoney(int money) {
+        this.money = money;
+    }
+
+    /**
+     * Réinitialise le joueur pour une nouvelle partie.
+     */
+    public void reset() {
+        this.money = Constants.INITIAL_MONEY;
+        this.totalEarnings = 0;
+        this.totalSpending = 0;
+        this.daysSurvived = 0;
+    }
+
     /**
      * Vérifie si le joueur peut se permettre une dépense.
      */

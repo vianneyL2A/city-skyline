@@ -512,4 +512,20 @@ public class CityMap {
 
         return sb.toString();
     }
+
+    /**
+     * Réinitialise la carte pour une nouvelle partie.
+     */
+    public void reset() {
+        // Réinitialiser toutes les cellules
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                cells[x][y] = new MapCell(x, y, TerrainType.CONSTRUCTIBLE);
+            }
+        }
+        // Regénérer l'océan
+        generateDefaultOcean();
+        // Recréer la grille électrique
+        this.electricityGrid = new ElectricityGrid(this);
+    }
 }

@@ -25,6 +25,7 @@ public class GameEngine implements GameObservable {
     private final EventManager eventManager;
     private GameState state;
     private tg.univlome.epl.ajee.city.skyline.model.map.CityMap cityMap;
+    private GameDifficulty difficulty = GameDifficulty.NORMAL;
 
     public GameEngine() {
         this.observers = new ArrayList<>();
@@ -35,6 +36,14 @@ public class GameEngine implements GameObservable {
         this.eventManager = new EventManager();
         this.state = GameState.NOT_STARTED;
         this.cityMap = null;
+    }
+
+    public void setDifficulty(GameDifficulty difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public GameDifficulty getDifficulty() {
+        return difficulty;
     }
 
     public void setCityMap(tg.univlome.epl.ajee.city.skyline.model.map.CityMap cityMap) {
@@ -54,11 +63,27 @@ public class GameEngine implements GameObservable {
      * Initialise une nouvelle partie avec configuration par défaut.
      */
     public void initializeGame() {
-        // Le joueur commence sans résidence - il doit les construire sur la carte
-        // Les résidences seront créées via CityMapPanel.buildResidence()
+        // Appliquer les paramètres de difficulté
+        player.setMoney(difficulty.getInitialMoney());
+        city.setGlobalHappiness(difficulty.getInitialHappiness());
 
         state = GameState.RUNNING;
         notifyObservers(GameEventType.GAME_STARTED);
+    }
+
+    /**
+     * Réinitialise le jeu pour une nouvelle partie.
+     */
+    public void reset() {
+        this.state = GameState.NOT_STARTED;
+        this.player.reset();
+        this.city.reset();
+        this.market.reset();
+        this.timeManager.reset();
+        this.eventManager.reset();
+        if (this.cityMap != null) {
+            this.cityMap.reset();
+        }
     }
 
     /**
@@ -297,7 +322,7 @@ public class GameEngine implements GameObservable {
      * Vérifie si le jeu est terminé.
      */
     private void checkGameOver() {
-        if (city.getGlobalHappiness() < Constants.MIN_HAPPINESS_THRESHOLD) {
+        if (city.getGlobalHappiness() < difficulty.getGameOverThreshold()) {
             state = GameState.GAME_OVER;
             notifyObservers(GameEventType.GAME_OVER,
                     "Les habitants sont trop mécontents. Le maire vous retire la gestion!");

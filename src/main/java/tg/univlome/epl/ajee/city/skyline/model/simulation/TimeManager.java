@@ -140,6 +140,19 @@ public class TimeManager {
         return String.format("%02d:%02d:%02d", currentHour, currentMinute, currentSecond);
     }
 
+    /**
+     * Réinitialise le temps pour une nouvelle partie.
+     */
+    public void reset() {
+        this.currentHour = 8;
+        this.currentMinute = 0;
+        this.currentSecond = 0;
+        this.currentDay = 1;
+        this.currentMonth = 1;
+        this.currentYear = 1;
+        this.currentCycleUnit = TimeCycle.DAY;
+    }
+
     @Override
     public String toString() {
         return formatDate();
