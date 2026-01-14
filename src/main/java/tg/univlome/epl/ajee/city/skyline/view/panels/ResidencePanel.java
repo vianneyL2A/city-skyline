@@ -214,10 +214,12 @@ public class ResidencePanel extends JPanel {
         }
     }
 
-    // === Button Renderer ===
-    private class ButtonRenderer extends JButton implements javax.swing.table.TableCellRenderer {
+    // === Button Renderer (utilise JLabel avec paintComponent pour fiabilité) ===
+    private class ButtonRenderer extends JLabel implements javax.swing.table.TableCellRenderer {
         public ButtonRenderer() {
             setOpaque(true);
+            setFont(Theme.FONT_BODY);
+            setHorizontalAlignment(SwingConstants.CENTER);
         }
 
         @Override
@@ -227,12 +229,11 @@ public class ResidencePanel extends JPanel {
             setText(text);
 
             if ("Max".equals(text)) {
-                setBackground(Colors.TEXT_SECONDARY);
-                setEnabled(false);
+                setBackground(new Color(200, 200, 200));
+                setForeground(Color.DARK_GRAY);
             } else {
-                setBackground(Colors.PRIMARY);
-                setForeground(Colors.TEXT_ON_PRIMARY);
-                setEnabled(true);
+                setBackground(new Color(34, 139, 34)); // Vert forêt
+                setForeground(Color.WHITE);
             }
             return this;
         }
