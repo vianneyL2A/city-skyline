@@ -24,6 +24,7 @@ public class GamePanel extends JPanel implements GameObserver {
     private final PowerPlantPanel powerPlantPanel;
     private final CityMapPanel cityMapPanel;
     private final EconomyPanel economyPanel;
+    private final ResidencePanel residencePanel;
     private Timer gameTimer;
     private Runnable onReturnToMenu;
 
@@ -55,9 +56,9 @@ public class GamePanel extends JPanel implements GameObserver {
         economyPanel = new EconomyPanel(gameEngine);
         tabbedPane.addTab("💰 Économie", economyPanel);
 
-        // Placeholder pour d'autres onglets
-        JPanel residencesPanel = createPlaceholderPanel("🏠 Gestion des résidences - À venir");
-        tabbedPane.addTab("🏠 Résidences", residencesPanel);
+        // Panneau Résidences
+        residencePanel = new ResidencePanel(gameEngine);
+        tabbedPane.addTab("🏠 Résidences", residencePanel);
 
         add(tabbedPane, BorderLayout.CENTER);
 
@@ -162,6 +163,8 @@ public class GamePanel extends JPanel implements GameObserver {
             powerPlantPanel.refresh();
         } else if (activeTab == economyPanel) {
             economyPanel.refresh();
+        } else if (activeTab == residencePanel) {
+            residencePanel.refresh();
         }
 
         // Mettre à jour la vitesse du timer
