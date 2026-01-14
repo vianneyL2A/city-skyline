@@ -68,9 +68,8 @@ public class Main {
         // Récupérer la difficulté sélectionnée
         GameDifficulty difficulty = menuPanel.getSelectedDifficulty();
 
-        // Réinitialiser le moteur de jeu
-        gameEngine.reset();
         gameEngine.setDifficulty(difficulty);
+        gameEngine.reset();
 
         // Supprimer l'ancien panneau de jeu si existant
         if (gamePanel != null) {

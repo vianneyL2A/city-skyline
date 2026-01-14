@@ -63,16 +63,14 @@ public class GameEngine implements GameObservable {
      * Initialise une nouvelle partie avec configuration par défaut.
      */
     public void initializeGame() {
-        // Appliquer les paramètres de difficulté
-        player.setMoney(difficulty.getInitialMoney());
-        city.setGlobalHappiness(difficulty.getInitialHappiness());
-
+        // Les paramètres de difficulté sont déjà appliqués par reset()
         state = GameState.RUNNING;
         notifyObservers(GameEventType.GAME_STARTED);
     }
 
     /**
      * Réinitialise le jeu pour une nouvelle partie.
+     * Applique automatiquement les paramètres de difficulté.
      */
     public void reset() {
         this.state = GameState.NOT_STARTED;
@@ -84,6 +82,10 @@ public class GameEngine implements GameObservable {
         if (this.cityMap != null) {
             this.cityMap.reset();
         }
+
+        // Appliquer immédiatement les paramètres de difficulté
+        player.setMoney(difficulty.getInitialMoney());
+        city.setGlobalHappiness(difficulty.getInitialHappiness());
     }
 
     /**
