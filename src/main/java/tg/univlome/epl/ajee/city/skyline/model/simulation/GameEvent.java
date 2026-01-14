@@ -163,9 +163,42 @@ public class GameEvent {
                 4);
     }
 
+    /**
+     * Convertit un nombre de cycles en durée lisible.
+     * Chaque cycle = 1h30 (90 minutes).
+     */
+    public static String formatDuration(int cycles) {
+        int totalMinutes = cycles * 90;
+        int hours = totalMinutes / 60;
+        int minutes = totalMinutes % 60;
+
+        if (hours >= 24) {
+            int days = hours / 24;
+            int remainingHours = hours % 24;
+            if (remainingHours > 0) {
+                return String.format("%d jour(s) et %dh", days, remainingHours);
+            }
+            return String.format("%d jour(s)", days);
+        } else if (hours > 0) {
+            if (minutes > 0) {
+                return String.format("%dh%02d", hours, minutes);
+            }
+            return String.format("%dh", hours);
+        } else {
+            return String.format("%d min", minutes);
+        }
+    }
+
+    /**
+     * Retourne la durée restante formatée.
+     */
+    public String getFormattedRemainingDuration() {
+        return formatDuration(remainingDuration);
+    }
+
     @Override
     public String toString() {
-        return String.format("[%s] %s - %s (Durée restante: %d cycles)",
-                severity.getDisplayName(), title, description, remainingDuration);
+        return String.format("[%s] %s - %s (Durée restante: %s)",
+                severity.getDisplayName(), title, description, getFormattedRemainingDuration());
     }
 }
