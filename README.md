@@ -2,6 +2,12 @@
 
 Un jeu de simulation en Java Swing où vous gérez le réseau électrique d'une ville en pleine croissance.
 
+# Vidéo démonstrative de City Skyline, sur Youtub en non répertorié
+
+https://youtu.be/Q8_tt2a1WrQ
+
+
+
 ## Prérequis
 
 - **Java 21** (JDK)
