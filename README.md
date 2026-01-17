@@ -82,7 +82,7 @@ Le jeu se termine si :
 ## Structure du Projet
 
 ```
-src/main/java/tg/univlome/epl/ajee/city/skyline/
+src/main/java/
 ├── Main.java                    # Point d'entrée
 ├── model/
 │   ├── entities/                # Résidences, Habitants, Joueur
@@ -110,6 +110,8 @@ src/main/java/tg/univlome/epl/ajee/city/skyline/
 - Intégration de la carte (CityMap) avec la logique de jeu et l'interface utilisateur
 - Règles de placement et affichage des centrales électriques
 - Images dédiées pour les tuiles des centrales électriques
+- Utilitaire de formatage de durée pour les événements
+- Paramètres d'équilibre du jeu et logique de progression des cycles
 
 #### **BARCOLA Mazamesso** - [@vianneyL2A](https://github.com/vianneyL2A)
 - Implémentation du système de lignes électriques (powerlines)
@@ -119,13 +121,12 @@ src/main/java/tg/univlome/epl/ajee/city/skyline/
 - Système de collecte de taxes basé sur le niveau des résidents et leur approvisionnement énergétique
 - Types de terrain et système de grille électrique avec propagation d'énergie
 - Gestion du temps : système de cycles TICK et avancement de la simulation
-- Paramètres d'équilibre du jeu et logique de progression des cycles
 - Niveaux de difficulté et fonctionnalité de réinitialisation du jeu
 - Refactorisation de l'initialisation du moteur de jeu
-- Utilitaire de formatage de durée pour les événements
 - Panel des Résidences pour la gestion des logements de la ville
 - Refactorisation du `ButtonRenderer` pour améliorer la fiabilité
-- Documentation complète :  README détaillé sur la configuration, le gameplay et la structure du projet
 - Expansion du fichier . gitignore
+
+Au niveau de l’ergonomie des commits, certaines des tâches de DOGBO Sarah ont été commitées sur ma machine, car nous avons eu des séances où nous travaillions ensemble.
 
 ---
